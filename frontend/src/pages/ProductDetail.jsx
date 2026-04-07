@@ -133,6 +133,7 @@ export default function ProductDetail() {
   const [latest, setLatest]       = useState([]);
   const [loading, setLoading]     = useState(true);
   const [activeImg, setActiveImg] = useState(0);
+  const [qty, setQty]             = useState(1);
   const [descOpen, setDescOpen]   = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
   const [orderOpen, setOrderOpen] = useState(false);
@@ -140,6 +141,7 @@ export default function ProductDetail() {
   useEffect(() => {
     setLoading(true);
     setActiveImg(0);
+    setQty(1);
     setDescOpen(false);
     Promise.all([
       axios.get(`/api/products/${id}`),

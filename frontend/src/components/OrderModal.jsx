@@ -5,7 +5,7 @@ function fmt(n) { return Number(n).toLocaleString('vi-VN') + 'đ'; }
 
 export default function OrderModal({ product, onClose }) {
   const [qty, setQty] = useState(1);
-  const [form, setForm] = useState({ name: '', phone: '', address: '', note: '', payment: 'cod' });
+  const [form, setForm] = useState({ name: '', phone: '', address: '', note: '' });
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState('');
@@ -42,7 +42,7 @@ export default function OrderModal({ product, onClose }) {
         customer_phone:   form.phone,
         customer_address: form.address,
         note:             form.note,
-        payment:          form.payment,
+        payment:          'cod',
       });
       setDone(true);
     } catch {
@@ -203,21 +203,11 @@ export default function OrderModal({ product, onClose }) {
               </div>
 
               {/* Payment method */}
-              <div>
-                <p className="text-xs text-gray-500 font-medium mb-2">Hình thức thanh toán</p>
-                <div className="space-y-2">
-                  {[
-                    { val: 'cod',  label: 'Thanh toán khi nhận hàng (COD)', icon: '💵' },
-                    { val: 'bank', label: 'Chuyển khoản ngân hàng (QR code)', icon: '🏦' },
-                  ].map(o => (
-                    <label key={o.val} className={`flex items-center gap-3 border rounded-lg px-3.5 py-2.5 cursor-pointer transition-colors ${form.payment === o.val ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                      <input type="radio" name="payment" value={o.val} checked={form.payment === o.val}
-                        onChange={() => setForm(f => ({ ...f, payment: o.val }))}
-                        className="accent-red-600 flex-shrink-0" />
-                      <span className="text-sm text-gray-700">{o.label}</span>
-                    </label>
-                  ))}
-                </div>
+              <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 rounded-lg px-3.5 py-2.5">
+                <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span className="text-sm text-gray-700 font-medium">Thanh toán khi nhận hàng (COD)</span>
               </div>
 
               {/* Notice */}
