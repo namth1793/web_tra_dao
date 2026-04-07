@@ -4,6 +4,7 @@ import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import FloatingContact from '../components/FloatingContact';
+import OrderModal from '../components/OrderModal';
 
 const fmt = n => n?.toLocaleString('vi-VN') + 'đ';
 
@@ -128,22 +129,18 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [data, setData]         = useState(null);
-  const [latest, setLatest]     = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [data, setData]           = useState(null);
+  const [latest, setLatest]       = useState([]);
+  const [loading, setLoading]     = useState(true);
   const [activeImg, setActiveImg] = useState(0);
-  const [qty, setQty]           = useState(1);
-  const [descOpen, setDescOpen] = useState(false);
+  const [descOpen, setDescOpen]   = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
-  const [orderSent, setOrderSent] = useState(false);
-  const [form, setForm] = useState({ name: '', phone: '', city: '', district: '', address: '', note: '', payment: 'cod' });
+  const [orderOpen, setOrderOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
     setActiveImg(0);
-    setQty(1);
     setDescOpen(false);
-    setOrderSent(false);
     Promise.all([
       axios.get(`/api/products/${id}`),
       axios.get('/api/products/latest?limit=10'),
@@ -187,22 +184,6 @@ export default function ProductDetail() {
   function handleAddToCart() {
     setCartAdded(true);
     setTimeout(() => setCartAdded(false), 2000);
-  }
-
-  async function handleOrder(e) {
-    e.preventDefault();
-    if (!form.name || !form.phone) return;
-    try {
-      await axios.post('/api/contacts', {
-        name: form.name,
-        phone: form.phone,
-        email: '',
-        message: `Đặt hàng: ${product.name} x${qty} - ${fmt(product.price * qty)}\nThành phố: ${form.city} ${form.district}\nĐịa chỉ: ${form.address}\nTT: ${form.payment === 'cod' ? 'COD' : 'Chuyển khoản'}\nGhi chú: ${form.note}`,
-      });
-      setOrderSent(true);
-    } catch {
-      setOrderSent(true);
-    }
   }
 
   const breadcrumbGroup = product.group_name || 'Sản phẩm';
@@ -337,16 +318,16 @@ export default function ProductDetail() {
                     </button>
                   </div>
 
-                  <a
-                    href="#dat-hang"
-                    className="mt-3 flex items-center justify-center gap-2 w-full h-11 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm transition-colors"
+                  <button
+                    onClick={() => setOrderOpen(true)}
+                    className="mt-3 flex items-center justify-center gap-2 w-full h-11 rounded-lg bg-red-700 hover:bg-red-600 text-white font-bold text-sm transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    ĐẶT HÀNG NHANH
-                    <span className="text-xs font-normal opacity-80">Giao hàng tận nơi, được kiểm tra hàng khi thanh toán</span>
-                  </a>
+                    MUA NGAY
+                    <span className="text-xs font-normal opacity-80">— Giao tận nơi, kiểm hàng trước khi trả tiền</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -370,112 +351,6 @@ export default function ProductDetail() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7"/>
                   </svg>
                 </button>
-              </div>
-            </div>
-
-            {/* Quick Order Form */}
-            <div id="dat-hang" className="bg-white rounded-xl border border-border-warm shadow-card overflow-hidden">
-              <div className="border-b border-border-warm px-5 py-3 flex items-center gap-3">
-                <div className="w-1 h-5 bg-amber-500 rounded-full" />
-                <h2 className="font-bold text-sm text-text-dark uppercase tracking-wide">Đặt Hàng Nhanh</h2>
-              </div>
-              <div className="grid md:grid-cols-2 gap-0">
-                {/* Left: product preview */}
-                <div className="p-5 border-b md:border-b-0 md:border-r border-border-warm bg-section-alt">
-                  <div className="flex items-start gap-4 mb-5">
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-20 h-20 object-cover rounded-xl border border-border-warm flex-shrink-0"
-                      onError={e => { e.target.src = `https://picsum.photos/seed/ord${product.id}/80/80`; }}
-                    />
-                    <div>
-                      <p className="text-sm font-semibold text-text-dark leading-snug mb-1">{product.name}</p>
-                      <p className="text-lg font-bold text-[#C0392B]">{fmt(product.price)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-sm text-text-muted font-medium">Số lượng</span>
-                    <div className="flex items-center border border-border-warm rounded-lg overflow-hidden bg-white">
-                      <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-8 h-8 text-text-body hover:bg-gray-50 flex items-center justify-center font-medium">-</button>
-                      <span className="w-10 h-8 flex items-center justify-center text-sm font-semibold border-x border-border-warm">{qty}</span>
-                      <button onClick={() => setQty(q => q + 1)} className="w-8 h-8 text-text-body hover:bg-gray-50 flex items-center justify-center font-medium">+</button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-text-muted leading-relaxed">
-                    Để đơn hàng được giao nhanh chóng, quý khách vui lòng điền đầy đủ thông tin. Xin cảm ơn!
-                  </p>
-                </div>
-
-                {/* Right: form */}
-                <div className="p-5">
-                  <h3 className="font-bold text-sm text-text-dark mb-4">Thông tin người mua</h3>
-                  {orderSent ? (
-                    <div className="text-center py-8">
-                      <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5"/>
-                        </svg>
-                      </div>
-                      <p className="font-semibold text-text-dark mb-1">Đặt hàng thành công!</p>
-                      <p className="text-sm text-text-muted">Chúng tôi sẽ liên hệ xác nhận đơn hàng trong vòng 30 phút.</p>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleOrder} className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <input required placeholder="Họ và tên *" value={form.name}
-                          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                          className="border border-border-warm rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C0392B] transition-colors"/>
-                        <input required placeholder="Số điện thoại *" value={form.phone}
-                          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                          className="border border-border-warm rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C0392B] transition-colors"/>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <input placeholder="Tỉnh/Thành phố" value={form.city}
-                          onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
-                          className="border border-border-warm rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C0392B] transition-colors"/>
-                        <input placeholder="Phường/Xã" value={form.district}
-                          onChange={e => setForm(f => ({ ...f, district: e.target.value }))}
-                          className="border border-border-warm rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C0392B] transition-colors"/>
-                      </div>
-                      <input placeholder="Số nhà, tên đường" value={form.address}
-                        onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
-                        className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C0392B] transition-colors"/>
-                      <textarea placeholder="Ghi chú đơn hàng (Không bắt buộc)" value={form.note}
-                        onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
-                        rows={2}
-                        className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm outline-none focus:border-[#C0392B] transition-colors resize-none"/>
-                      <div>
-                        <p className="text-xs text-text-muted font-medium mb-1.5">Hình thức thanh toán</p>
-                        <div className="flex flex-col gap-1.5">
-                          {[
-                            { val: 'cod', label: 'Trả tiền mặt khi nhận hàng' },
-                            { val: 'bank', label: 'Chuyển khoản ngân hàng (Quét mã QR)' },
-                          ].map(o => (
-                            <label key={o.val} className="flex items-center gap-2 cursor-pointer text-sm text-text-body">
-                              <input type="radio" name="payment" value={o.val}
-                                checked={form.payment === o.val}
-                                onChange={() => setForm(f => ({ ...f, payment: o.val }))}
-                                className="accent-[#C0392B]"/>
-                              {o.label}
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between pt-1 border-t border-border-warm">
-                        <span className="text-sm text-text-muted">Tổng cộng ({qty} sản phẩm)</span>
-                        <span className="text-lg font-bold text-[#C0392B]">{fmt(product.price * qty)}</span>
-                      </div>
-                      <button type="submit"
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
-                        </svg>
-                        ĐẶT HÀNG NGAY
-                      </button>
-                    </form>
-                  )}
-                </div>
               </div>
             </div>
 
@@ -568,6 +443,7 @@ export default function ProductDetail() {
 
       <Footer />
       <FloatingContact />
+      {orderOpen && <OrderModal product={product} onClose={() => setOrderOpen(false)} />}
     </div>
   );
 }

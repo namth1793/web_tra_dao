@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -7,6 +8,7 @@ const categoriesRouter = require('./routes/categories');
 const contactsRouter = require('./routes/contacts');
 const blogRouter = require('./routes/blog');
 const adminRouter = require('./routes/admin');
+const ordersRouter = require('./routes/orders');
 
 const app = express();
 const PORT = process.env.PORT || 5014;
@@ -21,6 +23,7 @@ app.use('/api/categories', categoriesRouter);
 app.use('/api/contacts', contactsRouter);
 app.use('/api/blog', blogRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/orders', ordersRouter);
 
 const server = app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

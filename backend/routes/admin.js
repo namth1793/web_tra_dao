@@ -1,7 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 const { db } = require('../db/database');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter(req, file, cb) {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Chỉ chấp nhận file ảnh'));
+  },
+});
 
 const SECRET = process.env.JWT_SECRET || 'tradao_jwt_secret_2024';
 
@@ -25,6 +42,20 @@ router.post('/login', (req, res) => {
   }
   const token = jwt.sign({ id: admin.id, username: admin.username }, SECRET, { expiresIn: '7d' });
   res.json({ token, username: admin.username });
+});
+
+// ── Upload ───────────────────────────────────────────────────
+router.post('/upload', auth, upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Không có file' });
+
+  const stream = cloudinary.uploader.upload_stream(
+    { folder: 'tradao', transformation: [{ width: 800, height: 800, crop: 'limit', quality: 'auto' }] },
+    (err, result) => {
+      if (err) return res.status(500).json({ error: 'Upload thất bại' });
+      res.json({ url: result.secure_url });
+    }
+  );
+  stream.end(req.file.buffer);
 });
 
 // ── Products ─────────────────────────────────────────────────
@@ -113,13 +144,30 @@ router.delete('/contacts/:id', auth, (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Orders ───────────────────────────────────────────────────
+router.get('/orders', auth, (req, res) => {
+  res.json(db.prepare('SELECT * FROM orders ORDER BY created_at DESC').all());
+});
+
+router.patch('/orders/:id/status', auth, (req, res) => {
+  const { status } = req.body;
+  db.prepare('UPDATE orders SET status=? WHERE id=?').run(status, req.params.id);
+  res.json({ ok: true });
+});
+
+router.delete('/orders/:id', auth, (req, res) => {
+  db.prepare('DELETE FROM orders WHERE id=?').run(req.params.id);
+  res.json({ ok: true });
+});
+
 // ── Stats ─────────────────────────────────────────────────────
 router.get('/stats', auth, (req, res) => {
   res.json({
     products: db.prepare('SELECT COUNT(*) as c FROM products').get().c,
     sections: db.prepare('SELECT COUNT(*) as c FROM sections').get().c,
     contacts: db.prepare('SELECT COUNT(*) as c FROM contacts').get().c,
-    blog: db.prepare('SELECT COUNT(*) as c FROM blog_posts').get().c,
+    blog:     db.prepare('SELECT COUNT(*) as c FROM blog_posts').get().c,
+    orders:   db.prepare('SELECT COUNT(*) as c FROM orders').get().c,
   });
 });
 

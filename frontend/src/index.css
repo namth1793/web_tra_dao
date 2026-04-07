@@ -49,3 +49,12 @@ body {
 
 /* Smooth transitions */
 a, button { transition: color 0.15s, background-color 0.15s, border-color 0.15s, opacity 0.15s; }
+
+/* Fix browser autofill background on dark inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0px 1000px #2C1A0A inset;
+  transition: background-color 5000s ease-in-out 0s;
+}

@@ -60,7 +60,7 @@ export default function AdminLogin() {
                 autoFocus
                 value={form.username}
                 onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
-                className="w-full bg-white/8 border border-white/15 rounded-lg px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-red-600 transition-colors"
+                className="w-full bg-[#2C1A0A] border border-white/20 rounded-lg px-4 py-2.5 text-white text-sm placeholder-white/40 outline-none focus:border-red-500 focus:bg-[#3A2210] transition-colors"
                 placeholder="admin"
               />
             </div>
@@ -71,7 +71,7 @@ export default function AdminLogin() {
                 required
                 value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                className="w-full bg-white/8 border border-white/15 rounded-lg px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-red-600 transition-colors"
+                className="w-full bg-[#2C1A0A] border border-white/20 rounded-lg px-4 py-2.5 text-white text-sm placeholder-white/40 outline-none focus:border-red-500 focus:bg-[#3A2210] transition-colors"
                 placeholder="••••••••"
               />
             </div>

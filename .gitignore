@@ -5,3 +5,4 @@ backend/data/*.db
 frontend/dist/
 .env
 *.env.local
+backend/.env

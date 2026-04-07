@@ -22,7 +22,26 @@ function ProductModal({ product, sections, onSave, onClose }) {
     is_featured: product?.is_featured ? true : false,
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState('');
+
+  async function handleImageChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const data = new FormData();
+      data.append('image', file);
+      const res = await axios.post('/api/admin/upload', data, {
+        headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' },
+      });
+      setForm(f => ({ ...f, image_url: res.data.url }));
+    } catch {
+      setErr('Upload ảnh thất bại. Kiểm tra cấu hình Cloudinary.');
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -91,14 +110,42 @@ function ProductModal({ product, sections, onSave, onClose }) {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">URL hình ảnh</label>
-            <input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-red-500"
-              placeholder="https://images.unsplash.com/..." />
-            {form.image_url && (
-              <img src={form.image_url} alt="" className="mt-2 h-20 w-20 object-cover rounded-lg border border-gray-200"
-                onError={e => e.target.style.display = 'none'} />
-            )}
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Hình ảnh sản phẩm</label>
+            <div className="flex items-start gap-3">
+              {/* Preview */}
+              <div className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-200 flex-shrink-0 overflow-hidden bg-gray-50 flex items-center justify-center">
+                {uploading ? (
+                  <span className="w-5 h-5 border-2 border-gray-300 border-t-red-600 rounded-full animate-spin" />
+                ) : form.image_url ? (
+                  <img src={form.image_url} alt="" className="w-full h-full object-cover"
+                    onError={e => { e.target.style.display = 'none'; }} />
+                ) : (
+                  <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                  </svg>
+                )}
+              </div>
+              {/* Upload btn + info */}
+              <div className="flex-1 min-w-0">
+                <label className="cursor-pointer inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 rounded-lg transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                  </svg>
+                  {uploading ? 'Đang upload...' : 'Chọn ảnh'}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} disabled={uploading} />
+                </label>
+                <p className="text-gray-400 text-[11px] mt-1.5 leading-relaxed">
+                  JPG, PNG, WebP · tối đa 5MB<br/>
+                  Ảnh sẽ được lưu trên Cloudinary
+                </p>
+                {form.image_url && (
+                  <button type="button" onClick={() => setForm(f => ({ ...f, image_url: '' }))}
+                    className="text-red-500 text-[11px] hover:underline mt-1">
+                    Xóa ảnh
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
           <div>
@@ -233,9 +280,10 @@ function SectionModal({ section, groups, onSave, onClose }) {
 
 // ── Sidebar ────────────────────────────────────────────────────
 const NAV = [
-  { key: 'products', label: 'Sản phẩm', icon: <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> },
-  { key: 'sections', label: 'Danh mục', icon: <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg> },
-  { key: 'contacts', label: 'Liên hệ', icon: <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg> },
+  { key: 'products', label: 'Sản phẩm',  icon: <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> },
+  { key: 'sections', label: 'Danh mục',  icon: <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg> },
+  { key: 'orders',   label: 'Đơn hàng',  icon: <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg> },
+  { key: 'contacts', label: 'Liên hệ',   icon: <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg> },
 ];
 
 // ── Main AdminPage ─────────────────────────────────────────────
@@ -245,6 +293,7 @@ export default function AdminPage() {
   const [groups, setGroups] = useState([]);
   const [sections, setSections] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null); // { type: 'product'|'section', data: ... }
@@ -262,15 +311,17 @@ export default function AdminPage() {
     setLoading(true);
     try {
       const headers = authHeaders();
-      const [gRes, sRes, cRes, stRes] = await Promise.all([
+      const [gRes, sRes, cRes, oRes, stRes] = await Promise.all([
         axios.get('/api/admin/products', { headers }),
         axios.get('/api/admin/sections', { headers }),
         axios.get('/api/admin/contacts', { headers }),
-        axios.get('/api/admin/stats', { headers }),
+        axios.get('/api/admin/orders',   { headers }),
+        axios.get('/api/admin/stats',    { headers }),
       ]);
       setGroups(gRes.data);
       setSections(sRes.data);
       setContacts(cRes.data);
+      setOrders(oRes.data);
       setStats(stRes.data);
       // Open first group by default
       if (gRes.data.length > 0 && Object.keys(openGroups).length === 0) {
@@ -337,7 +388,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
-      <aside className="w-56 bg-[#1A0F05] flex-shrink-0 flex flex-col">
+      <aside className="w-44 bg-[#1A0F05] flex-shrink-0 flex flex-col">
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/8">
           <div className="flex items-center gap-2.5">
@@ -366,6 +417,11 @@ export default function AdminPage() {
               {n.key === 'contacts' && contacts.length > 0 && (
                 <span className="ml-auto bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
                   {contacts.length}
+                </span>
+              )}
+              {n.key === 'orders' && orders.filter(o => o.status === 'pending').length > 0 && (
+                <span className="ml-auto bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                  {orders.filter(o => o.status === 'pending').length}
                 </span>
               )}
             </button>
@@ -417,6 +473,7 @@ export default function AdminPage() {
           <h1 className="font-bold text-gray-800 text-base">
             {tab === 'products' && 'Quản lý sản phẩm'}
             {tab === 'sections' && 'Quản lý danh mục'}
+            {tab === 'orders'   && 'Đơn hàng'}
             {tab === 'contacts' && 'Hộp thư liên hệ'}
           </h1>
           <div className="flex items-center gap-3">
@@ -635,6 +692,69 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* ── ORDERS TAB ── */}
+          {tab === 'orders' && (
+            <div className="space-y-3">
+              {orders.length === 0 ? (
+                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
+                  <svg className="w-10 h-10 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
+                  </svg>
+                  <p className="text-sm">Chưa có đơn hàng nào</p>
+                </div>
+              ) : orders.map(o => {
+                const statusMap = {
+                  pending:   { label: 'Chờ xác nhận', cls: 'bg-amber-100 text-amber-700' },
+                  confirmed: { label: 'Đã xác nhận',  cls: 'bg-blue-100 text-blue-700' },
+                  shipping:  { label: 'Đang giao',    cls: 'bg-purple-100 text-purple-700' },
+                  done:      { label: 'Hoàn thành',   cls: 'bg-green-100 text-green-700' },
+                  cancelled: { label: 'Đã hủy',       cls: 'bg-red-100 text-red-600' },
+                };
+                const st = statusMap[o.status] || statusMap.pending;
+                return (
+                  <div key={o.id} className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="font-bold text-gray-800 text-sm">#{o.id}</span>
+                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
+                          <span className="text-gray-400 text-xs">{new Date(o.created_at).toLocaleString('vi-VN')}</span>
+                        </div>
+                        <p className="text-sm font-medium text-gray-800 mb-0.5 truncate">{o.product_name} <span className="text-gray-400">x{o.quantity}</span></p>
+                        <p className="text-red-700 font-bold text-sm">{fmt(o.product_price * o.quantity)}</p>
+                      </div>
+                      <div className="text-right text-xs space-y-0.5 flex-shrink-0">
+                        <p className="font-semibold text-gray-800">{o.customer_name}</p>
+                        <a href={`tel:${o.customer_phone}`} className="text-red-700 font-medium hover:underline block">{o.customer_phone}</a>
+                        <p className="text-gray-500 max-w-[200px] text-right">{o.customer_address}</p>
+                        {o.note && <p className="text-gray-400 italic">"{o.note}"</p>}
+                        <p className="text-gray-400">{o.payment === 'bank' ? 'Chuyển khoản' : 'COD'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                      <span className="text-xs text-gray-500 mr-1">Trạng thái:</span>
+                      {['pending','confirmed','shipping','done','cancelled'].map(s => (
+                        <button key={s} onClick={async () => {
+                          await axios.patch(`/api/admin/orders/${o.id}/status`, { status: s }, { headers: authHeaders() });
+                          setOrders(prev => prev.map(x => x.id === o.id ? { ...x, status: s } : x));
+                        }}
+                          className={`text-[10px] font-semibold px-2 py-1 rounded-full border transition-colors ${o.status === s ? (statusMap[s]?.cls || '') + ' border-transparent' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}>
+                          {statusMap[s]?.label}
+                        </button>
+                      ))}
+                      <button onClick={() => setDeleteConfirm({ type: 'order', id: o.id, name: `Đơn #${o.id}` })}
+                        className="ml-auto text-gray-300 hover:text-red-500 transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* ── CONTACTS TAB ── */}
           {tab === 'contacts' && (
             <div className="space-y-3">
@@ -716,6 +836,10 @@ export default function AdminPage() {
                 if (deleteConfirm.type === 'product') await deleteProduct(deleteConfirm.id);
                 if (deleteConfirm.type === 'section') await deleteSection(deleteConfirm.id);
                 if (deleteConfirm.type === 'contact') await deleteContact(deleteConfirm.id);
+                if (deleteConfirm.type === 'order') {
+                  await axios.delete(`/api/admin/orders/${deleteConfirm.id}`, { headers: authHeaders() });
+                  setOrders(prev => prev.filter(x => x.id !== deleteConfirm.id));
+                }
                 setDeleteConfirm(null);
               }}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors">
