@@ -57,7 +57,18 @@ function initDB() {
       category TEXT DEFAULT 'Kiến thức trà đạo',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS admins (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL
+    );
   `);
+
+  const adminCount = db.prepare('SELECT COUNT(*) as c FROM admins').get();
+  if (adminCount.c === 0) {
+    db.prepare('INSERT INTO admins (username, password) VALUES (?, ?)').run('admin', 'admin123');
+  }
 
   const count = db.prepare('SELECT COUNT(*) as c FROM groups').get();
   if (count.c === 0) {

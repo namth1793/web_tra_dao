@@ -222,9 +222,14 @@ export default function Footer() {
           <p className="text-white/30 text-xs">
             © 2024 Công ty TNHH Thế Giới Trà Đạo – thegioitradao.com
           </p>
-          <div className="flex gap-4 text-xs text-white/30">
+          <div className="flex gap-4 text-xs text-white/30 items-center">
             <Link to="/gioi-thieu" className="hover:text-white/60 transition-colors">Về chúng tôi</Link>
             <Link to="/lien-he" className="hover:text-white/60 transition-colors">Liên hệ</Link>
+            <Link to="/admin/login" className="text-[#1A0F05] hover:text-white/20 transition-colors" aria-label="Admin">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 1C8.676 1 6 3.676 6 7v1H4a1 1 0 00-1 1v13a1 1 0 001 1h16a1 1 0 001-1V9a1 1 0 00-1-1h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v1H8V7c0-2.276 1.724-4 4-4zm0 9a2 2 0 110 4 2 2 0 010-4z"/>
+              </svg>
+            </Link>
           </div>
         </div>
       </div>

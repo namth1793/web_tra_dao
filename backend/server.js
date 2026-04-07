@@ -6,6 +6,7 @@ const productsRouter = require('./routes/products');
 const categoriesRouter = require('./routes/categories');
 const contactsRouter = require('./routes/contacts');
 const blogRouter = require('./routes/blog');
+const adminRouter = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 5014;
@@ -19,6 +20,7 @@ app.use('/api/products', productsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/contacts', contactsRouter);
 app.use('/api/blog', blogRouter);
+app.use('/api/admin', adminRouter);
 
 const server = app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
