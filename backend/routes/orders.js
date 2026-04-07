@@ -3,7 +3,10 @@ const router = express.Router();
 const { Resend } = require('resend');
 const { db } = require('../db/database');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  if (!process.env.RESEND_API_KEY) return null;
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 function fmtVND(n) {
   return Number(n).toLocaleString('vi-VN') + 'đ';
@@ -33,7 +36,8 @@ router.post('/', async (req, res) => {
 
   // Send email to admin
   const adminEmail = process.env.ADMIN_EMAIL;
-  if (adminEmail && process.env.RESEND_API_KEY) {
+  const resend = getResend();
+  if (adminEmail && resend) {
     try {
       await resend.emails.send({
         from: 'Thế Giới Trà Đạo <onboarding@resend.dev>',
