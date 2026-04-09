@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 // Red circular logo mark matching thegioitradao style
 function LogoMark() {
@@ -37,7 +38,8 @@ const NAV = [
   { label: 'LIÊN HỆ',      to: '/lien-he' },
 ];
 
-export default function Header({ cartCount = 0, cartTotal = 0 }) {
+export default function Header() {
+  const { cartCount, cartTotal } = useCart();
   const [menuOpen, setMenuOpen]   = useState(false);
   const [shopOpen, setShopOpen]   = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -134,8 +136,8 @@ export default function Header({ cartCount = 0, cartTotal = 0 }) {
 
           {/* Cart button */}
           <div className="flex items-center gap-2">
-            <a
-              href="#cart"
+            <Link
+              to="/gio-hang"
               className="hidden md:flex items-center gap-2 bg-[#7B3F1A] hover:bg-[#6A3516] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors relative"
             >
               <span className="whitespace-nowrap">{cartLabel}</span>
@@ -150,7 +152,7 @@ export default function Header({ cartCount = 0, cartTotal = 0 }) {
                   </span>
                 )}
               </div>
-            </a>
+            </Link>
 
             {/* Mobile hamburger */}
             <button
@@ -201,14 +203,21 @@ export default function Header({ cartCount = 0, cartTotal = 0 }) {
                 {link.label}
               </Link>
             ))}
-            <a href="#cart"
-              className="mt-3 flex items-center justify-center gap-2 bg-[#7B3F1A] text-white text-sm font-semibold py-2.5 rounded-lg">
+            <Link to="/gio-hang" onClick={() => setMenuOpen(false)}
+              className="mt-3 flex items-center justify-center gap-2 bg-[#7B3F1A] text-white text-sm font-semibold py-2.5 rounded-lg relative">
               {cartLabel}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272"/>
-              </svg>
-            </a>
+              <div className="relative">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272"/>
+                </svg>
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+            </Link>
           </div>
         )}
       </div>

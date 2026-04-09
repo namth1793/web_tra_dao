@@ -2,7 +2,7 @@ import ProductCard from './ProductCard';
 
 function fmt(n) { return n.toLocaleString('vi-VN') + 'đ'; }
 
-export default function ProductSection({ section, onAddToCart, bgAlt = false, compact = false }) {
+export default function ProductSection({ section, bgAlt = false, compact = false }) {
   if (!section?.products?.length) return null;
 
   return (
@@ -34,7 +34,6 @@ export default function ProductSection({ section, onAddToCart, bgAlt = false, co
           <ProductCard
             key={product.id}
             product={product}
-            onAddToCart={onAddToCart}
           />
         ))}
       </div>

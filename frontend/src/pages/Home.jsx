@@ -54,7 +54,6 @@ function Skeleton() {
 export default function Home() {
   const [groups, setGroups]   = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart]       = useState([]);
 
   useEffect(() => {
     axios.get('/api/products/by-group')
@@ -63,24 +62,9 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  function addToCart(product) {
-    setCart(prev => {
-      const ex = prev.find(i => i.id === product.id);
-      return ex
-        ? prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i)
-        : [...prev, { ...product, qty: 1 }];
-    });
-  }
-
-  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
-  const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-
-  // Flatten all sections for display
-  const allSections = groups.flatMap(g => g.sections.map(s => ({ ...s, group: g })));
-
   return (
     <div className="min-h-screen bg-gray-100">
-      <Header cartCount={cartCount} cartTotal={cartTotal} />
+      <Header />
       <HeroBanner />
       <CategorySection />
 
@@ -96,7 +80,6 @@ export default function Home() {
                   <ProductSection
                     key={section.id}
                     section={section}
-                    onAddToCart={addToCart}
                     bgAlt={si % 2 === 1}
                     compact
                   />

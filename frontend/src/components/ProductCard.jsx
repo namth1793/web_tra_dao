@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import OrderModal from './OrderModal';
 
 function fmt(n) {
   return n.toLocaleString('vi-VN') + 'đ';
 }
 
-export default function ProductCard({ product, onAddToCart }) {
+export default function ProductCard({ product }) {
+  const { addToCart } = useCart();
   const [added, setAdded]   = useState(false);
   const [wish, setWish]     = useState(false);
   const [order, setOrder]   = useState(false);
@@ -19,7 +21,7 @@ export default function ProductCard({ product, onAddToCart }) {
     e.preventDefault();
     e.stopPropagation();
     if (added) return;
-    onAddToCart?.(product);
+    addToCart(product, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   }

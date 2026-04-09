@@ -16,6 +16,74 @@ function paymentLabel(p) {
   return p === 'bank' ? 'Chuyển khoản ngân hàng' : 'Thanh toán khi nhận hàng (COD)';
 }
 
+// POST /api/orders/cart — đặt hàng nhiều sản phẩm từ giỏ hàng
+router.post('/cart', async (req, res) => {
+  const { items, customer_name, customer_phone, customer_address, note, payment = 'cod' } = req.body;
+
+  if (!items?.length || !customer_name || !customer_phone || !customer_address) {
+    return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
+  }
+
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+
+  // Insert one order row per item
+  const insertStmt = db.prepare(`
+    INSERT INTO orders (product_id, product_name, product_price, quantity, customer_name, customer_phone, customer_address, note, payment)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const insertAll = db.transaction(rows => rows.forEach(item =>
+    insertStmt.run(item.id || null, item.name, item.price, item.qty, customer_name, customer_phone, customer_address, note || null, payment)
+  ));
+  insertAll(items);
+
+  // Send summary email
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const resend = getResend();
+  if (adminEmail && resend) {
+    try {
+      const itemRows = items.map(i => `
+        <tr style="background: #fdf8f3;">
+          <td style="padding: 8px 12px; color: #1a0f05;">${i.name}</td>
+          <td style="padding: 8px 12px; text-align: center; color: #6b7280;">x${i.qty}</td>
+          <td style="padding: 8px 12px; text-align: right; font-weight: 700; color: #C0392B;">${fmtVND(i.price * i.qty)}</td>
+        </tr>`).join('');
+
+      await resend.emails.send({
+        from: 'Thế Giới Trà Đạo <onboarding@resend.dev>',
+        to: adminEmail,
+        subject: `[Giỏ hàng] ${customer_name} — ${items.length} sản phẩm — ${fmtVND(total)}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+            <div style="background: #7B2D2D; padding: 20px 28px;">
+              <h2 style="color: #fff; margin: 0;">Đơn hàng từ giỏ hàng</h2>
+              <p style="color: rgba(255,255,255,0.7); margin: 4px 0 0; font-size: 13px;">${items.length} sản phẩm · thegioitradao.com</p>
+            </div>
+            <div style="padding: 24px 28px;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
+                ${itemRows}
+                <tr>
+                  <td colspan="2" style="padding: 10px 12px; font-weight: 700; text-align: right; border-top: 2px solid #f3e8da;">Tổng cộng</td>
+                  <td style="padding: 10px 12px; text-align: right; font-weight: 700; color: #C0392B; font-size: 16px; border-top: 2px solid #f3e8da;">${fmtVND(total)}</td>
+                </tr>
+              </table>
+              <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+                <tr><td style="padding: 6px 0; color: #6b7280; width: 130px;">Họ tên</td><td style="padding: 6px 0; font-weight: 600; color: #1a0f05;">${customer_name}</td></tr>
+                <tr><td style="padding: 6px 0; color: #6b7280;">Điện thoại</td><td style="padding: 6px 0; font-weight: 600; color: #C0392B;">${customer_phone}</td></tr>
+                <tr><td style="padding: 6px 0; color: #6b7280;">Địa chỉ</td><td style="padding: 6px 0; color: #1a0f05;">${customer_address}</td></tr>
+                ${note ? `<tr><td style="padding: 6px 0; color: #6b7280; vertical-align: top;">Ghi chú</td><td style="padding: 6px 0; color: #1a0f05;">${note}</td></tr>` : ''}
+              </table>
+            </div>
+          </div>`,
+      });
+    } catch (emailErr) {
+      console.error('Resend error:', emailErr.message);
+    }
+  }
+
+  res.json({ ok: true });
+});
+
 // POST /api/orders
 router.post('/', async (req, res) => {
   const { product_id, product_name, product_price, quantity = 1, customer_name, customer_phone, customer_address, note, payment = 'cod' } = req.body;
